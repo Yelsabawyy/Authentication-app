@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Register schema
 export const registerSchema = z.object({
-  userName: z.string().nonempty("Username is required"),
+  username: z.string().nonempty("username is required"),
   email: z
     .string()
     .nonempty("Email is required")

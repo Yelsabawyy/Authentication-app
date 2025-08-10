@@ -19,9 +19,28 @@ export default function Register() {
     resolver: zodResolver(registerSchema),
   });
 
-  const onSubmit = (data: RegisterInput) => {
-    console.log("Register Data:", data);
-    // call your API here
+  const onSubmit = async (data: RegisterInput) => {
+    try{
+
+      const res= await fetch('/api/auth/register',{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+      const result = await res.json();
+      if (res.ok) {
+        alert(" Registration successful",);
+        console.log("Registration successful:", result);
+      } else {
+        alert("Registration failed:");
+        console.error("Registration failed:", result.message);
+      }
+
+    }catch (err){
+      console.error("Registration error:", err);
+    }
   };
 
   return (
@@ -33,22 +52,22 @@ export default function Register() {
       >
         <h2 className="text-2xl font-semibold text-center">Register</h2>
 
-        {/* Username */}
+        {/* username */}
         <div>
           <label className="block mb-1 font-medium" htmlFor="username">
-            Username
+            username
           </label>
           <Input
             id="username"
             type="username"
             placeholder="username"
-            {...form.register("userName")}
-            aria-invalid={!!form.formState.errors.userName}
-            aria-describedby="userName-error"
+            {...form.register("username")}
+            aria-invalid={!!form.formState.errors.username}
+            aria-describedby="username-error"
           />
-          {form.formState.errors.userName && (
+          {form.formState.errors.username && (
             <p className="text-red-600 mt-1 text-sm" id="email-error">
-              {form.formState.errors.userName.message}
+              {form.formState.errors.username.message}
             </p>
           )}
         </div>

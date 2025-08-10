@@ -24,9 +24,28 @@ export default function Login() {
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = (data: LoginInput) => {
-    console.log("Login Data:", data);
-    // handle login logic here
+  const onSubmit = async (data: LoginInput) => {
+    try{
+
+      const res= await fetch('/api/auth/login',{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+      const result = await res.json();
+      if (res.ok) {
+        alert("Login successful:",);
+        console.log("Login successful:", result);
+      } else {
+        alert("Login failed:");
+        console.error("Login failed:", result.message);
+      }
+
+    }catch (err){
+      console.error("Login error:", err);
+    }
   };
 
   return (

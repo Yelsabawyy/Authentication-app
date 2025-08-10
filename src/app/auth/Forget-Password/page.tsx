@@ -10,15 +10,15 @@ import { Input } from "@/components/ui/input";
 
 // Step 1: Email schema
 const emailSchema = z.object({
-  email: z.string().nonempty("Email is required").email("Invalid email address"),
+  email: z
+    .string()
+    .nonempty("Email is required")
+    .email("Invalid email address"),
 });
 
 // Step 2: OTP schema
 const otpSchema = z.object({
-  otp: z
-    .string()
-    .length(6, "OTP must be 6 digits")
-    .regex(/^\d+$/, "OTP must contain only digits"),
+  otp: z.string().length(6, "OTP must be 6 digits"),
 });
 
 // Step 3: Reset password schema
@@ -32,6 +32,7 @@ type ResetInput = z.infer<typeof resetSchema>;
 
 export default function ForgotPassword() {
   const [step, setStep] = useState<"email" | "otp" | "reset">("email");
+  const [otp, setOTP] = useState<string>("");
   const [email, setEmail] = useState("");
 
   // Forms for each step
@@ -60,15 +61,30 @@ export default function ForgotPassword() {
   });
 
   // Fake send OTP
-  const onSendOtp: SubmitHandler<EmailInput> = (data) => {
+  const onSendOtp: SubmitHandler<EmailInput> = async (data) => {
     setEmail(data.email);
-    alert(`OTP sent to ${data.email}`); // replace with real API call
-    setStep("otp");
+    const res = await fetch("/api/auth/send-otp", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (res.ok) {
+      alert(" Send OTP successfully");
+      console.log("Send OTP successfully:", result.message);
+      setOTP(result.otp);
+      setStep("otp");
+    } else {
+      alert("Send OTP failed:");
+      console.error("Send OTP failed:", result.message);
+    }
   };
 
   // Fake verify OTP
   const onVerifyOtp: SubmitHandler<OtpInput> = (data) => {
-    if (data.otp === "123456") {
+    if (data.otp === otp) {
       setStep("reset");
     } else {
       alert("Invalid OTP");
@@ -76,10 +92,24 @@ export default function ForgotPassword() {
   };
 
   // Fake reset password
-  const onResetPassword: SubmitHandler<ResetInput> = (data) => {
-    alert("Password reset successfully!"); // replace with real API call
-    setStep("email");
-    setEmail("");
+  const onResetPassword: SubmitHandler<ResetInput> = async (data) => {
+    const res = await fetch("/api/auth/change-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: email, newPassword: data.newPassword }),
+    });
+    const result = await res.json();
+    if (res.ok) {
+      alert(" Change password successfully");
+      console.log("Change password successfully:", result.message);
+      setStep("email");
+      setEmail("");
+    } else {
+      alert("Change password failed:");
+      console.error("Change password failed:", result.message);
+    }
   };
 
   return (
@@ -87,7 +117,9 @@ export default function ForgotPassword() {
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md space-y-6">
         {step === "email" && (
           <>
-            <h2 className="text-2xl font-semibold text-center">Forgot Password</h2>
+            <h2 className="text-2xl font-semibold text-center">
+              Forgot Password
+            </h2>
             <p className="text-center text-gray-600 mb-4">
               Enter your email to receive an OTP code
             </p>
@@ -141,8 +173,13 @@ export default function ForgotPassword() {
 
         {step === "reset" && (
           <>
-            <h2 className="text-2xl font-semibold text-center">Reset Password</h2>
-            <form onSubmit={handleSubmitReset(onResetPassword)} className="space-y-4">
+            <h2 className="text-2xl font-semibold text-center">
+              Reset Password
+            </h2>
+            <form
+              onSubmit={handleSubmitReset(onResetPassword)}
+              className="space-y-4"
+            >
               <Input
                 type="password"
                 placeholder="New password"
